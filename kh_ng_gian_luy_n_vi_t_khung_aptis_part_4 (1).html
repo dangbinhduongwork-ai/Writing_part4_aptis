@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Không Gian Luyện Viết Khung</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex flex-col">
+  <!-- Header -->
+  <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center font-bold text-lg shadow-inner">
+          P4
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-bold tracking-tight">Aptis Writing Part 4 — Phòng Luyện Khung & Đếm Từ
+          </h1>
+          <p class="text-xs text-slate-400">Tự động đếm từ chuẩn kỳ thi • So khớp khung từng phần • Chế độ học thuộc
+            khung</p>
+        </div>
+      </div>
+
+      <!-- Timer & Version Switcher -->
+      <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+        <div class="flex items-center gap-1.5 bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs">
+          <span class="text-slate-400">Mẫu khung:</span>
+          <select id="templatePresetSelect"
+            class="bg-transparent text-white font-semibold focus:outline-none cursor-pointer">
+            <option value="b2" class="bg-slate-900 text-white">Bản Tinh Chỉnh (B2/C1)</option>
+            <option value="original" class="bg-slate-900 text-white">Bản Gốc Của Bạn</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5">
+          <span class="text-xs text-slate-400">⏱ Thời gian:</span>
+          <span id="timerDisplay" class="font-mono font-bold text-sm text-emerald-400">30:00</span>
+          <button id="timerToggleBtn" type="button"
+            class="text-xs bg-blue-600 hover:bg-blue-500 text-white font-medium px-2 py-0.5 rounded transition">
+            Bắt đầu
+          </button>
+          <button id="timerResetBtn" type="button"
+            class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 px-2 py-0.5 rounded transition">
+            Đặt lại
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="max-w-7xl mx-auto px-4 flex gap-2 border-t border-slate-800/80 pt-2">
+      <button id="tabPracticeBtn" type="button"
+        class="px-4 py-2 text-xs sm:text-sm font-semibold rounded-t-lg border-b-2 border-blue-500 text-white bg-slate-800/70 transition flex items-center gap-2">
+        <span>✍️ 1. Luyện Gõ Thư Theo Đề & Check Khung</span>
+      </button>
+      <button id="tabMemorizeBtn" type="button"
+        class="px-4 py-2 text-xs sm:text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center gap-2">
+        <span>🎯 2. Ô Nhập Khung (Check Thuộc Từng Chữ & Sửa Khung)</span>
+      </button>
+      <button id="tabEmergencyBtn" type="button"
+        class="px-4 py-2 text-xs sm:text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center gap-2">
+        <span>🛟 3. Bảng Câu "Chữa Cháy" B1/B2</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Toast notification -->
+  <div id="toastBox"
+    class="fixed bottom-4 right-4 z-50 hidden bg-slate-900 text-white text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-lg border border-slate-700 flex items-center gap-2">
+    <span id="toastText">Đã sao chép!</span>
+  </div>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-5 space-y-5">
+
+    <!-- ==================== TAB 1: PRACTICE WORKSPACE ==================== -->
+    <section id="viewPractice" class="space-y-5">
+      <!-- Prompt Bar -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 font-bold text-xs border border-blue-200">Đề
+              bài luyện tập</span>
+            <select id="promptSelect"
+              class="text-xs sm:text-sm font-semibold bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="0">Đề 1: Music Club — Tổ chức đêm nhạc mùa hè (Tin vui)</option>
+              <option value="1">Đề 2: Photography Club — Tăng phí thành viên 20% (Tin xấu)</option>
+              <option value="2">Đề 3: Travel Club — Đổi lịch chuyến dã ngoại tháng tới (Thay đổi)</option>
+              <option value="3">Đề 4: Book Club — Mời tác giả nổi tiếng đến nói chuyện (Tin vui)</option>
+              <option value="4">Đề 5: Fitness Club — Đóng cửa phòng tập 2 tuần để sửa chữa (Tin xấu)</option>
+              <option value="custom">Tự nhập đề bài riêng của bạn...</option>
+            </select>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <label
+              class="inline-flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer select-none bg-slate-100 px-2.5 py-1.5 rounded-lg border border-slate-200">
+              <input type="checkbox" id="hardLimitToggle" class="rounded text-blue-600 focus:ring-blue-500" />
+              <span>Chặn gõ khi vượt quá số từ tối đa</span>
+            </label>
+            <button id="toggleHintModalBtn" type="button"
+              class="text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 px-3 py-1.5 rounded-lg transition">
+              💡 Xem gợi ý lắp khung cho đề này
+            </button>
+          </div>
+        </div>
+
+        <div id="promptDisplayCard"
+          class="bg-slate-50 rounded-xl p-3.5 border border-slate-200 text-xs sm:text-sm text-slate-700 space-y-1.5">
+          <p class="font-semibold text-slate-900" id="promptClubLine">You are a member of a Music Club. You received
+            this email from the club manager:</p>
+          <blockquote id="promptBodyText"
+            class="pl-3 border-l-4 border-blue-500 italic text-slate-800 bg-white p-2.5 rounded-r-lg">
+            "We are planning to organize an outdoor summer concert next month for all club members. Please let us know
+            how you feel about this plan and suggest when and where we should hold the concert."
+          </blockquote>
+          <p class="text-xs text-slate-500" id="promptTasksLine">
+            • <strong>Task 1 (50–75 words):</strong> Write an email to your friend, Tim. Express your feelings and
+            suggest your ideas.<br>
+            • <strong>Task 2 (120–250 words):</strong> Write a formal email to the club manager. Express your feelings
+            and give your suggestions with reasons.
+          </p>
+        </div>
+
+        <!-- Custom Prompt Editor (Hidden unless 'custom' selected) -->
+        <div id="customPromptBox" class="hidden pt-2">
+          <textarea id="customPromptInput" rows="2"
+            class="w-full text-xs sm:text-sm p-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Dán đề bài tiếng Anh của bạn vào đây..."></textarea>
+        </div>
+
+        <!-- Collapsible Hint Drawer -->
+        <div id="hintDrawer"
+          class="hidden bg-amber-50/80 border border-amber-200 rounded-xl p-3.5 text-xs space-y-2 text-slate-800">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-amber-900">📌 Gợi ý điền vào 2 khung cho đề bài này:</span>
+            <button id="fillSampleAnswerBtn" type="button"
+              class="text-xs bg-amber-600 hover:bg-amber-700 text-white font-semibold px-2.5 py-1 rounded-md transition">
+              Điền thử bài mẫu hoàn chỉnh vào 2 ô dưới
+            </button>
+          </div>
+          <div id="hintContent" class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1"></div>
+        </div>
+      </div>
+
+      <!-- Two Columns for Part 4.1 (Friend) & Part 4.2 (Manager) -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+        <!-- ================= CARD 1: INFORMAL EMAIL TO FRIEND ================= -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
+          <!-- Card Header -->
+          <div
+            class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-3 flex items-center justify-between">
+            <div>
+              <span class="text-[11px] uppercase tracking-wider font-semibold text-blue-100">Part 4.1 • Email cho bạn
+                (Informal)</span>
+              <h2 class="text-base font-bold">Thư gửi Bạn (Mục tiêu: 50 – 75 từ)</h2>
+            </div>
+            <div class="text-right">
+              <div id="wordBadge1"
+                class="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur px-3 py-1 rounded-full text-xs font-bold">
+                <span id="wordCount1" class="text-base">0</span> / 50–75 từ
+              </div>
+            </div>
+          </div>
+
+          <!-- Progress Bar & Word Status -->
+          <div class="px-4 pt-3 pb-2 bg-slate-50 border-b border-slate-200 space-y-1.5">
+            <div class="flex items-center justify-between text-xs">
+              <span id="wordStatusText1" class="font-semibold text-amber-600">Chưa gõ từ nào (Cần tối thiểu 50 từ, tối
+                đa 75 từ)</span>
+              <span id="charCount1" class="text-slate-400">0 ký tự</span>
+            </div>
+            <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden flex">
+              <div id="wordBar1" class="h-full bg-amber-500 transition-all duration-200" style="width: 0%"></div>
+            </div>
+            <div class="flex justify-between text-[10px] text-slate-400 font-medium">
+              <span>0 từ</span>
+              <span>Chuẩn tối thiểu: 50 từ</span>
+              <span>Tối đa: 75 từ</span>
+              <span>90+ (Quá dài)</span>
+            </div>
+          </div>
+
+          <!-- Quick Toolbar -->
+          <div class="px-4 py-2 bg-white border-b border-slate-100 flex flex-wrap items-center gap-1.5">
+            <button id="insertSkeleton1Btn" type="button"
+              class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium px-2.5 py-1 rounded-lg border border-blue-200 transition">
+              + Chèn sườn Khung 1
+            </button>
+            <button id="insertRescue1Btn" type="button"
+              class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium px-2.5 py-1 rounded-lg border border-emerald-200 transition">
+              🛟 Chèn câu "Chữa cháy"
+            </button>
+            <button id="toggleRef1Btn" type="button"
+              class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-2.5 py-1 rounded-lg transition">
+              👁 Ẩn/Hiện khung mẫu
+            </button>
+            <button id="clear1Btn" type="button"
+              class="ml-auto text-xs text-rose-600 hover:bg-rose-50 px-2 py-1 rounded-lg transition">
+              Xóa trắng
+            </button>
+          </div>
+
+          <!-- Reference Template Box (Collapsible) -->
+          <div id="refBox1"
+            class="mx-4 mt-3 p-3 rounded-xl bg-blue-50/60 border border-blue-200 text-xs text-slate-700 space-y-1">
+            <div class="font-bold text-blue-900 flex items-center justify-between">
+              <span>📌 Khung 1 Mẫu (Để nhìn theo khi gõ):</span>
+              <span class="text-[11px] font-normal text-blue-700">Chữ nghiêng trong ngoặc [...] là chỗ cần điền</span>
+            </div>
+            <p id="refText1" class="leading-relaxed"></p>
+          </div>
+
+          <!-- Typing Textarea -->
+          <div class="p-4 flex-1 flex flex-col">
+            <textarea id="editor1" rows="8"
+              class="w-full flex-1 p-3.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm leading-relaxed text-slate-900 resize-y font-normal"
+              placeholder="Gõ bức thư gửi bạn (Hi Tim,...) vào đây. Bộ đếm từ và bảng kiểm tra khung ở dưới sẽ cập nhật ngay khi bạn gõ..."></textarea>
+          </div>
+
+          <!-- Live Checklist for Frame 1 -->
+          <div class="px-4 pb-4 space-y-2">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Bảng Check Đúng Khung 1 (7 Thành
+                Phần)</h3>
+              <span id="scoreBadge1" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600">Đã
+                khớp: 0/7 mục</span>
+            </div>
+            <div id="checklist1" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs"></div>
+          </div>
+        </div>
+
+        <!-- ================= CARD 2: FORMAL EMAIL TO MANAGER ================= -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
+          <!-- Card Header -->
+          <div
+            class="bg-gradient-to-r from-slate-800 to-slate-900 text-white px-4 py-3 flex items-center justify-between">
+            <div>
+              <span class="text-[11px] uppercase tracking-wider font-semibold text-slate-300">Part 4.2 • Thư gửi Quản lý
+                (Formal)</span>
+              <h2 class="text-base font-bold">Thư gửi Quản lý (Mục tiêu: 120 – 250 từ)</h2>
+            </div>
+            <div class="text-right">
+              <div id="wordBadge2"
+                class="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur px-3 py-1 rounded-full text-xs font-bold">
+                <span id="wordCount2" class="text-base">0</span> / 120–250 từ
+              </div>
+            </div>
+          </div>
+
+          <!-- Progress Bar & Word Status -->
+          <div class="px-4 pt-3 pb-2 bg-slate-50 border-b border-slate-200 space-y-1.5">
+            <div class="flex items-center justify-between text-xs">
+              <span id="wordStatusText2" class="font-semibold text-amber-600">Chưa gõ từ nào (Cần tối thiểu 120 từ, lý
+                tưởng 140–180 từ)</span>
+              <span id="charCount2" class="text-slate-400">0 ký tự</span>
+            </div>
+            <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden flex">
+              <div id="wordBar2" class="h-full bg-amber-500 transition-all duration-200" style="width: 0%"></div>
+            </div>
+            <div class="flex justify-between text-[10px] text-slate-400 font-medium">
+              <span>0 từ</span>
+              <span>Tối thiểu: 120 từ</span>
+              <span>Đẹp nhất: 150–180 từ</span>
+              <span>Tối đa: 250 từ</span>
+            </div>
+          </div>
+
+          <!-- Quick Toolbar -->
+          <div class="px-4 py-2 bg-white border-b border-slate-100 flex flex-wrap items-center gap-1.5">
+            <button id="insertSkeleton2Btn" type="button"
+              class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium px-2.5 py-1 rounded-lg border border-blue-200 transition">
+              + Chèn sườn Khung 2
+            </button>
+            <button id="insertRescue2Btn" type="button"
+              class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium px-2.5 py-1 rounded-lg border border-emerald-200 transition">
+              🛟 Chèn câu "Chữa cháy"
+            </button>
+            <button id="toggleRef2Btn" type="button"
+              class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-2.5 py-1 rounded-lg transition">
+              👁 Ẩn/Hiện khung mẫu
+            </button>
+            <button id="clear2Btn" type="button"
+              class="ml-auto text-xs text-rose-600 hover:bg-rose-50 px-2 py-1 rounded-lg transition">
+              Xóa trắng
+            </button>
+          </div>
+
+          <!-- Reference Template Box (Collapsible) -->
+          <div id="refBox2"
+            class="mx-4 mt-3 p-3 rounded-xl bg-slate-100 border border-slate-300 text-xs text-slate-700 space-y-1">
+            <div class="font-bold text-slate-900 flex items-center justify-between">
+              <span>📌 Khung 2 Mẫu (Để nhìn theo khi gõ):</span>
+              <span class="text-[11px] font-normal text-slate-600">Không dùng từ viết tắt (I'm, don't)</span>
+            </div>
+            <p id="refText2" class="leading-relaxed"></p>
+          </div>
+
+          <!-- Typing Textarea -->
+          <div class="p-4 flex-1 flex flex-col">
+            <textarea id="editor2" rows="8"
+              class="w-full flex-1 p-3.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm leading-relaxed text-slate-900 resize-y font-normal"
+              placeholder="Gõ bức thư trang trọng gửi Quản lý (Dear Manager,...) vào đây. Hệ thống sẽ tự động đếm từ, bắt lỗi viết tắt và kiểm tra 7 phần của khung..."></textarea>
+          </div>
+
+          <!-- Warning Box for Contractions in Formal Letter -->
+          <div id="contractionAlert2"
+            class="hidden mx-4 mb-3 px-3 py-2 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-700 font-medium">
+          </div>
+
+          <!-- Live Checklist for Frame 2 -->
+          <div class="px-4 pb-4 space-y-2">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Bảng Check Đúng Khung 2 (7 Thành
+                Phần)</h3>
+              <span id="scoreBadge2" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600">Đã
+                khớp: 0/7 mục</span>
+            </div>
+            <div id="checklist2" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Overall Band Estimation Banner -->
+      <div
+        class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-wrap items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Đánh giá tổng quan bài đang
+              gõ</span>
+            <span id="estimatedBandBadge"
+              class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700">Chưa đủ dữ liệu</span>
+          </div>
+          <p id="estimatedBandReason" class="text-xs sm:text-sm text-slate-600">
+            Hãy gõ đủ cả 2 lá thư theo khung để hệ thống kiểm tra độ khớp khung, giới hạn từ và ước tính Band điểm (B1 /
+            B2 / C1).
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="copyBothBtn" type="button"
+            class="text-xs sm:text-sm font-semibold bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-xl transition">
+            📋 Sao chép cả 2 bài viết
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: MEMORIZE & CHECK EXACT TEMPLATE ==================== -->
+    <section id="viewMemorize" class="hidden space-y-5">
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-slate-900">🎯 Phòng Kiểm Tra Thuộc Lòng Khung (So Khớp Từng
+              Từ)</h2>
+            <p class="text-xs sm:text-sm text-slate-600">
+              Bạn có thể sửa khung mẫu ở cột trái (hoặc ẩn đi), sau đó tự gõ lại khung vào cột phải để máy chấm xem bạn
+              đã gõ <strong>đúng từng chữ của khung chưa</strong>.
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <select id="memTargetSelect"
+              class="text-xs sm:text-sm font-semibold bg-blue-50 border border-blue-200 text-blue-800 rounded-xl px-3 py-2 focus:outline-none">
+              <option value="frame1">Đang luyện thuộc: Khung 1 (Thư gửi bạn)</option>
+              <option value="frame2">Đang luyện thuộc: Khung 2 (Thư gửi Quản lý)</option>
+            </select>
+            <button id="hideTargetToggleBtn" type="button"
+              class="text-xs sm:text-sm font-semibold bg-slate-800 hover:bg-slate-700 text-white px-3.5 py-2 rounded-xl transition">
+              🙈 Ẩn khung mẫu để tự nhớ
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <!-- Left: Target Frame Input (Editable by user) -->
+          <div class="space-y-2 flex flex-col">
+            <div class="flex items-center justify-between">
+              <label for="targetFrameInput" class="text-xs font-bold uppercase tracking-wider text-slate-600">
+                1. Khung Chuẩn Của Bạn (Có thể tự sửa theo ý thích)
+              </label>
+              <span id="targetWordCountLabel" class="text-xs font-semibold text-slate-500">0 từ</span>
+            </div>
+            <div id="targetFrameWrapper" class="relative flex-1 flex flex-col">
+              <textarea id="targetFrameInput" rows="10"
+                class="w-full flex-1 p-3.5 rounded-xl bg-slate-50 border border-slate-300 text-sm leading-relaxed text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+              <div id="targetHiddenOverlay"
+                class="hidden absolute inset-0 bg-slate-900/95 rounded-xl flex flex-col items-center justify-center text-white p-6 text-center space-y-3">
+                <div class="text-3xl">🙈</div>
+                <p class="font-bold text-sm sm:text-base">Đã ẩn khung mẫu để bạn tự gõ bằng trí nhớ!</p>
+                <p class="text-xs text-slate-300">Hãy gõ khung vào ô bên phải. Khi cần xem lại, bấm nút bên dưới.</p>
+                <button id="revealTargetBtn" type="button"
+                  class="text-xs bg-blue-600 hover:bg-blue-500 text-white font-semibold px-3.5 py-1.5 rounded-lg">
+                  👁 Hiện lại khung mẫu
+                </button>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-500">
+              💡 Mẹo: Các chỗ trống như <code class="bg-slate-100 px-1 rounded">...</code> trong khung mẫu sẽ được bỏ
+              qua khi chấm độ chính xác, bạn chỉ cần gõ đúng các câu cố định của khung.
+            </p>
+          </div>
+
+          <!-- Right: User Memory Test Input -->
+          <div class="space-y-2 flex flex-col">
+            <div class="flex items-center justify-between">
+              <label for="userMemoryInput" class="text-xs font-bold uppercase tracking-wider text-blue-700">
+                2. Ô Nhập Khung Để Check (Gõ lại khung của bạn vào đây)
+              </label>
+              <div class="flex items-center gap-2">
+                <span id="memoryWordCountLabel" class="text-xs font-semibold text-blue-600">Đã gõ: 0 từ</span>
+                <button id="clearMemoryBtn" type="button" class="text-xs text-rose-600 hover:underline">Xóa</button>
+              </div>
+            </div>
+            <textarea id="userMemoryInput" rows="10"
+              class="w-full flex-1 p-3.5 rounded-xl bg-white border-2 border-blue-300 text-sm leading-relaxed text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Gõ lại khung của bạn vào đây để kiểm tra xem bạn đã thuộc đúng từng từ và dấu câu chưa..."></textarea>
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+              <button id="checkMemoryNowBtn" type="button"
+                class="text-xs sm:text-sm bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-xl shadow-sm transition">
+                ✅ Check Khung Ngay (So khớp từng từ)
+              </button>
+              <span id="memoryAccuracyBadge"
+                class="text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700">
+                Độ chính xác: 0%
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Word-by-word Diff Output -->
+        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-2">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-600">Kết quả đối chiếu từng từ với khung
+              chuẩn:</h3>
+            <div class="flex items-center gap-3 text-xs">
+              <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                Đúng chuẩn</span>
+              <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                Còn thiếu (Chưa gõ)</span>
+              <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Dư
+                từ / Sai chính tả</span>
+            </div>
+          </div>
+          <div id="diffOutputBox"
+            class="p-3.5 bg-white rounded-lg border border-slate-200 text-sm leading-relaxed min-h-[70px]">
+            <span class="text-slate-400 italic text-xs">Hãy gõ vào ô số 2 và bấm "Check Khung Ngay" (hoặc kết quả sẽ tự
+              cập nhật khi bạn gõ)...</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: EMERGENCY RESCUE CHEAT SHEET ==================== -->
+    <section id="viewEmergency" class="hidden space-y-5">
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+        <div>
+          <h2 class="text-base sm:text-lg font-bold text-slate-900">🛟 Bộ Câu "Chữa Cháy" Khi Không Dịch Được Đề (Giữ
+            Chắc Band B1/B2)</h2>
+          <p class="text-xs sm:text-sm text-slate-600">
+            Trong trường hợp xấu nhất vào phòng thi mà bạn không hiểu đề yêu cầu đề xuất cái gì, hãy dùng bộ câu trung
+            tính & vạn năng dưới đây để không bao giờ bị tính là lạc đề.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="p-4 rounded-xl bg-blue-50/70 border border-blue-200 space-y-2">
+            <span class="text-xs font-bold uppercase text-blue-700">Bước 1 & 2: Bắt tên CLB và Trích câu đầu tiên</span>
+            <p class="text-xs sm:text-sm text-slate-800">
+              • <strong>Tên CLB:</strong> Nhìn dòng đầu tiên của đề (<code
+                class="bg-white px-1 rounded">You are a member of a [Tên] club</code>), chép đúng từ đứng trước chữ
+              <code class="bg-white px-1 rounded">club</code>.<br>
+              • <strong>Trích đề:</strong> Chép lại câu đầu tiên trong thông báo của CLB, chỉ cần đổi <code
+                class="bg-white px-1 rounded font-bold">We → the club</code> và <code
+                class="bg-white px-1 rounded font-bold">our → the</code>.
+            </p>
+          </div>
+
+          <div class="p-4 rounded-xl bg-amber-50/70 border border-amber-200 space-y-2">
+            <span class="text-xs font-bold uppercase text-amber-800">Bước 3: Từ chỉ cảm xúc "Bất ngờ" (Dùng cho cả tin
+              vui & buồn)</span>
+            <p class="text-xs sm:text-sm text-slate-800">
+              Nếu không biết đề báo tin vui hay tin xấu, đừng đoán mò <code class="bg-white px-1 rounded">excited</code>
+              hay <code class="bg-white px-1 rounded">sad</code>. Hãy dùng <code
+                class="bg-white px-1 rounded font-bold text-amber-900">surprised</code> (ngạc nhiên):<br>
+              • <strong>Khung 1:</strong> <code
+                class="bg-white px-1 rounded">I feel so surprised to hear that.</code><br>
+              • <strong>Khung 2:</strong> <code
+                class="bg-white px-1 rounded">Honestly, I was quite surprised when I read this announcement.</code>
+            </p>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-xs font-bold uppercase text-emerald-800">Bước 4: 2 Câu Giải Pháp Vạn Năng (Khớp 100% Mọi
+              Chủ Đề CLB)</span>
+            <button id="applyEmergencyToPracticeBtn" type="button"
+              class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3 py-1.5 rounded-lg transition">
+              Đưa bộ khung Chữa Cháy này sang Tab Luyện Viết
+            </button>
+          </div>
+          <p class="text-xs sm:text-sm text-slate-700">
+            Mọi thông báo của CLB (dù là tổ chức sự kiện, đổi lịch, tăng phí hay đóng cửa) đều cần <strong>họp bàn
+              bạc</strong> và <strong>gửi khảo sát lấy ý kiến thành viên</strong>:
+          </p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs sm:text-sm">
+            <div class="bg-white p-3 rounded-lg border border-emerald-200">
+              <p class="font-bold text-slate-900 mb-1">Dùng cho Khung 1 (Thư gửi bạn):</p>
+              <p class="text-emerald-900 font-medium">
+                "I think the club should send an online survey because we need to collect all members' opinions."
+              </p>
+              <p class="text-xs text-slate-500 mt-1">
+                (Mình nghĩ CLB nên gửi một khảo sát online vì chúng mình cần thu thập ý kiến của tất cả thành viên.)
+              </p>
+            </div>
+            <div class="bg-white p-3 rounded-lg border border-emerald-200">
+              <p class="font-bold text-slate-900 mb-1">Dùng cho Khung 2 (Thư gửi Quản lý):</p>
+              <p class="text-emerald-900 font-medium">
+                "In my opinion, we should organize a short meeting next week because members need to discuss this matter
+                together. Furthermore, I recommend we send an online survey via email so that everyone can vote for the
+                best option."
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // ==================== DATA & TEMPLATES ====================
+    const TEMPLATES = {
+      b2: {
+        name: "Bản Tinh Chỉnh (B2/C1)",
+        frame1Display: `<strong>Hi Tim,</strong><br><strong>How have you been recently? I hope everything goes well with you.</strong><br><strong>I just received an email from our</strong> <em>[tên CLB]</em> <strong>club manager. The email mentioned that the club</strong> <em>[trích thông báo đề bài]</em>. <strong>I feel so</strong> <em>[excited / disappointed / surprised]</em> <strong>to hear that.</strong><br><strong>I think the club should</strong> <em>[giải pháp + because + lý do ngắn]</em>. <strong>What's your opinion about this?</strong><br><strong>Please write to me soon and let me know what you think.</strong><br><strong>Speak soon,</strong><br><em>[Tên của bạn]</em>`,
+        frame2Display: `<strong>Dear Manager,</strong><br><strong>I hope this email reaches you in good health and high spirits. My name is</strong> <em>[Họ tên]</em>, <strong>and I have been a dedicated member of the</strong> <em>[tên CLB]</em> <strong>club for more than two years.</strong><br><strong>I am writing this email to share my thoughts and suggestions regarding the recent notice of the club. In your email, you mentioned that</strong> <em>[trích thông báo đề bài]</em>. <strong>Honestly, I was quite</strong> <em>[delighted / concerned / surprised]</em> <strong>when I read this announcement.</strong><br><strong>In my opinion, we should</strong> <em>[giải pháp 1]</em> <strong>because</strong> <em>[lý do]</em>. <strong>Furthermore, I recommend we</strong> <em>[giải pháp 2]</em> <strong>so that</strong> <em>[mục đích]</em>. <strong>It would be great if the club could consider my ideas to help all members have a better experience.</strong><br><strong>I have talked to other club members and found that they share my opinions.</strong><br><strong>I hope my suggestions are helpful. I appreciate your attention to this matter. Please feel free to reach out if you need more information.</strong><br><strong>I am looking forward to hearing from you.</strong><br><strong>Yours faithfully,</strong><br><em>[Họ tên đầy đủ]</em>`,
+        frame1Skeleton: `Hi Tim,\n\nHow have you been recently? I hope everything goes well with you.\n\nI just received an email from our ... club manager. The email mentioned that the club ... . I feel so ... to hear that.\n\nI think the club should ... because ... . What's your opinion about this?\n\nPlease write to me soon and let me know what you think.\n\nSpeak soon,\nAlex`,
+        frame2Skeleton: `Dear Manager,\n\nI hope this email reaches you in good health and high spirits. My name is Alex Nguyen, and I have been a dedicated member of the ... club for more than two years.\n\nI am writing this email to share my thoughts and suggestions regarding the recent notice of the club. In your email, you mentioned that ... . Honestly, I was quite ... when I read this announcement.\n\nIn my opinion, we should ... because ... . Furthermore, I recommend we ... so that ... . It would be great if the club could consider my ideas to help all members have a better experience.\n\nI have talked to other club members and found that they share my opinions.\n\nI hope my suggestions are helpful. I appreciate your attention to this matter. Please feel free to reach out if you need more information.\n\nI am looking forward to hearing from you.\n\nYours faithfully,\nAlex Nguyen`
+      },
+      original: {
+        name: "Bản Gốc Của Bạn",
+        frame1Display: `<strong>Hi Tim,</strong><br><strong>How have you been recently? I hope everything goes well with you.</strong><br><strong>I just received an email from my</strong> <em>[tên CLB]</em> <strong>club manager. In the email, he said that my club</strong> <em>[trích thông báo đề bài]</em>. <strong>I feel so</strong> <em>[excited / disappointed]</em> <strong>to hear that.</strong><br><strong>I think the club should</strong> <em>[giải pháp của bạn]</em>. <strong>What's your opinion about this?</strong><br><strong>Please write to me soon and let me know what you think.</strong><br><strong>Speak soon,</strong><br><em>[Tên của bạn]</em>`,
+        frame2Display: `<strong>Dear Manager,</strong><br><strong>I hope this email reaches you in good health and high spirits. My name is</strong> <em>[Họ tên]</em>. <strong>I have been a</strong> <em>[tên CLB]</em> <strong>club member for more than two years.</strong><br><strong>As a dedicated member of the club for two years, I am writing to share my thoughts and suggestions regarding the recent notice of the club. According to the email, you said that</strong> <em>[trích thông báo đề bài]</em>. <strong>I am so</strong> <em>[excited / disappointed]</em> <strong>to hear that.</strong><br><strong>In my opinion, we should</strong> <em>[giải pháp 1]</em> <strong>because</strong> <em>[lý do]</em>. <strong>Furthermore, I recommend we</strong> <em>[giải pháp 2]</em>. <strong>It would be great if the club could consider my ideas so that all members can have a better experience.</strong><br><strong>I have talked to other club members and found that they share my opinions.</strong><br><strong>I hope my suggestions are helpful. I appreciate your attention to this matter. Please feel free to reach out if you need more information.</strong><br><strong>I am looking forward to hearing from you.</strong><br><strong>Yours faithfully,</strong><br><em>[Họ tên đầy đủ]</em>`,
+        frame1Skeleton: `Hi Tim,\n\nHow have you been recently? I hope everything goes well with you.\n\nI just received an email from my ... club manager. In the email, he said that my club ... . I feel so ... to hear that.\n\nI think the club should ... . What's your opinion about this?\n\nPlease write to me soon and let me know what you think.\n\nSpeak soon,\nAlex`,
+        frame2Skeleton: `Dear Manager,\n\nI hope this email reaches you in good health and high spirits. My name is Alex Nguyen. I have been a ... club member for more than two years.\n\nAs a dedicated member of the club for two years, I am writing to share my thoughts and suggestions regarding the recent notice of the club. According to the email, you said that ... . I am so ... to hear that.\n\nIn my opinion, we should ... because ... . Furthermore, I recommend we ... . It would be great if the club could consider my ideas so that all members can have a better experience.\n\nI have talked to other club members and found that they share my opinions.\n\nI hope my suggestions are helpful. I appreciate your attention to this matter. Please feel free to reach out if you need more information.\n\nI am looking forward to hearing from you.\n\nYours faithfully,\nAlex Nguyen`
+      }
+    };
+
+    const SAMPLE_PROMPTS = [
+      {
+        club: "music",
+        clubTitle: "You are a member of a Music Club. You received this email from the club manager:",
+        notice: "\"We are planning to organize an outdoor summer concert next month for all club members. Please let us know how you feel about this plan and suggest when and where we should hold the concert.\"",
+        sentiment1: "excited",
+        sentiment2: "delighted",
+        quote1: "is planning to hold an outdoor summer concert next month",
+        quote2: "the club plans to organize an outdoor summer concert next month for all members",
+        sol1: "hold the concert at the city park on Sunday evening because most members are free at the weekend",
+        sol2a: "hold the concert on Sunday evening because most members are free at the weekend",
+        sol2b: "choose the central city park so that more people can join comfortably"
+      },
+      {
+        club: "photography",
+        clubTitle: "You are a member of a Photography Club. You received this email from the club manager:",
+        notice: "\"Due to rising costs, we have to increase the monthly membership fee by 20% starting next month. Please tell us how you feel about this change and suggest other ways the club can save money.\"",
+        sentiment1: "disappointed",
+        sentiment2: "concerned",
+        quote1: "has to increase the monthly membership fee by 20% next month",
+        quote2: "the club has to increase the monthly membership fee by 20% due to rising costs",
+        sol1: "organize online workshops instead of renting a large hall because it will save a lot of money",
+        sol2a: "organize online workshops twice a month because this helps reduce room rental costs",
+        sol2b: "find local sponsors for our photo exhibitions so that we do not need to raise the fee"
+      },
+      {
+        club: "travel",
+        clubTitle: "You are a member of a Travel Club. You received this email from the club manager:",
+        notice: "\"Unfortunately, we have to cancel our camping trip this weekend because of bad weather. Please let us know your feelings and suggest another date or an indoor activity we can do instead.\"",
+        sentiment1: "disappointed",
+        sentiment2: "disappointed",
+        quote1: "has to cancel our camping trip this weekend because of bad weather",
+        quote2: "the club has to cancel the camping trip this weekend due to bad weather",
+        sol1: "reschedule the trip to next weekend because the weather will be sunny and warm",
+        sol2a: "move the camping trip to next Sunday because the weather forecast looks much better",
+        sol2b: "organize an indoor travel sharing session at a cafe so that members can still meet each other"
+      },
+      {
+        club: "book",
+        clubTitle: "You are a member of a Book Club. You received this email from the club manager:",
+        notice: "\"We are going to invite a famous writer to talk to our club members next month. Please tell us how you feel about this news and suggest what topic the writer should talk about.\"",
+        sentiment1: "excited",
+        sentiment2: "delighted",
+        quote1: "is going to invite a famous writer to talk to us next month",
+        quote2: "the club is going to invite a famous writer to speak to members next month",
+        sol1: "ask the writer to share tips on creative writing because many members want to write their own stories",
+        sol2a: "ask the guest speaker to talk about creative writing skills because many members love writing",
+        sol2b: "prepare a thirty-minute question session so that members can interact directly with the author"
+      },
+      {
+        club: "fitness",
+        clubTitle: "You are a member of a Fitness Club. You received this email from the club manager:",
+        notice: "\"We will close the main gym hall for two weeks next month to repair the equipment. Please let us know how you feel and suggest how members can continue training during this time.\"",
+        sentiment1: "disappointed",
+        sentiment2: "concerned",
+        quote1: "will close the main gym hall for two weeks next month for repairs",
+        quote2: "the club will close the main gym hall for two weeks next month to repair the equipment",
+        sol1: "hold outdoor morning exercise classes in the park because members still want to practice together",
+        sol2a: "organize outdoor yoga and running sessions in the nearby park because the weather is very pleasant",
+        sol2b: "reduce the membership fee for next month so that all members feel satisfied with the service"
+      }
+    ];
+
+    // Checklist rules for Frame 1 (7 items)
+    const CHECK_RULES_1 = [
+      {
+        id: "f1_greet",
+        label: "1. Chào hỏi (Hi/Hello...)",
+        test: (txt) => /\b(hi|hello|morning|hey)\b/i.test(txt)
+      },
+      {
+        id: "f1_ask",
+        label: "2. Hỏi thăm sức khỏe",
+        test: (txt) => /(how have you been|how are you|hope everything goes well|hope you are well|hope all is well|long time no see)/i.test(txt)
+      },
+      {
+        id: "f1_reason",
+        label: "3. Lý do & Trích thông báo CLB",
+        test: (txt) => /(received an email|piece of good news|exciting news|interesting news|bad news|writing to tell you)/i.test(txt) && /\bclub\b/i.test(txt)
+      },
+      {
+        id: "f1_emotion",
+        label: "4. Nêu cảm xúc (excited/sad...)",
+        test: (txt) => /\b(happy|sad|disappointed|excited|surprised|upset|glad)\b/i.test(txt)
+      },
+      {
+        id: "f1_solution",
+        label: "5. Đưa giải pháp (should/suggest)",
+        test: (txt) => /\b(should|suggest|consider|believe we)\b/i.test(txt) && !/\bshould\s+\.\.\./i.test(txt)
+      },
+      {
+        id: "f1_opinion",
+        label: "6. Hỏi ý kiến bạn (?)",
+        test: (txt) => /(what's your opinion|what’s your opinion|what is your opinion|do you agree|could you give me|what should i do|what do you think)/i.test(txt)
+      },
+      {
+        id: "f1_close",
+        label: "7. Kết thư (Speak soon / Bye...)",
+        test: (txt) => /(write to me soon|write back to me|speak soon|bye for now)/i.test(txt)
+      }
+    ];
+
+    // Checklist rules for Frame 2 (7 items)
+    const CHECK_RULES_2 = [
+      {
+        id: "f2_greet",
+        label: "1. Chào hỏi (Dear Manager/Sir...)",
+        test: (txt) => /\bdear\s+(manager|sir|madam|mr|mrs|president)/i.test(txt)
+      },
+      {
+        id: "f2_intro",
+        label: "2. Giới thiệu tên & Thành viên CLB",
+        test: (txt) => /(good health and high spirits|finds you well|having a great day)/i.test(txt) && /\bmember\b/i.test(txt)
+      },
+      {
+        id: "f2_reason",
+        label: "3. Lý do viết & Trích lại đề",
+        test: (txt) => /(share my thoughts|in response to|respond to your email|express my feelings)/i.test(txt) && /(mentioned that|said that|according to|stating that)/i.test(txt)
+      },
+      {
+        id: "f2_emotion",
+        label: "4. Nêu cảm xúc trang trọng",
+        test: (txt) => /\b(delighted|concerned|disappointed|excited|upset|surprised|pleased|happy)\b/i.test(txt)
+      },
+      {
+        id: "f2_solution",
+        label: "5. Hai đề xuất + Lý do (because/so that)",
+        test: (txt) => /\b(should|recommend|suggest)\b/i.test(txt) && /\b(because|so that|since|as)\b/i.test(txt) && !/\bshould\s+\.\.\./i.test(txt)
+      },
+      {
+        id: "f2_members",
+        label: "6. Câu chốt đồng thuận thành viên",
+        test: (txt) => /(other club members|share my opinions|share my thoughts|waiting for this)/i.test(txt)
+      },
+      {
+        id: "f2_close",
+        label: "7. Kết thư (Yours faithfully...)",
+        test: (txt) => /(looking forward to hearing|appreciate your attention|suggestions are helpful)/i.test(txt) && /(yours faithfully|kind regards|warm regards|respectfully|regards)/i.test(txt)
+      }
+    ];
+
+    // ==================== STATE ====================
+    let currentPreset = "b2";
+    let timerSeconds = 30 * 60;
+    let timerInterval = null;
+    let isTimerRunning = false;
+
+    // ==================== HELPERS ====================
+    function countWords(str) {
+      if (!str) return 0;
+      // Ignore placeholder dots "..." when counting real words
+      const cleaned = str
+        .replace(/\.{2,}/g, " ")
+        .trim();
+      if (!cleaned) return 0;
+      return cleaned.split(/\s+/).filter(Boolean).length;
+    }
+
+    function enforceMaxWords(text, maxWords) {
+      const tokens = text.trim().split(/\s+/);
+      if (tokens.length <= maxWords) return text;
+      return tokens.slice(0, maxWords).join(" ");
+    }
+
+    function showToast(msg) {
+      const box = document.getElementById("toastBox");
+      const txt = document.getElementById("toastText");
+      txt.textContent = msg;
+      box.classList.remove("hidden");
+      setTimeout(() => {
+        box.classList.add("hidden");
+      }, 2400);
+    }
+
+    // ==================== RENDER & UPDATE PRACTICE VIEW ====================
+    function updateReferenceBoxes() {
+      const preset = TEMPLATES[currentPreset];
+      document.getElementById("refText1").innerHTML = preset.frame1Display;
+      document.getElementById("refText2").innerHTML = preset.frame2Display;
+    }
+
+    function updatePromptUI() {
+      const val = document.getElementById("promptSelect").value;
+      const customBox = document.getElementById("customPromptBox");
+      const card = document.getElementById("promptDisplayCard");
+
+      if (val === "custom") {
+        customBox.classList.remove("hidden");
+        card.classList.add("hidden");
+        document.getElementById("hintDrawer").classList.add("hidden");
+        return;
+      }
+
+      customBox.classList.add("hidden");
+      card.classList.remove("hidden");
+      const p = SAMPLE_PROMPTS[Number(val)];
+      document.getElementById("promptClubLine").textContent = p.clubTitle;
+      document.getElementById("promptBodyText").textContent = p.notice;
+
+      // Render Hints
+      const hintContent = document.getElementById("hintContent");
+      hintContent.innerHTML = `
+        <div class="bg-white p-2.5 rounded-lg border border-amber-200 space-y-1">
+          <div class="font-bold text-blue-800">Gợi ý điền Khung 1 (Thư gửi bạn):</div>
+          <div>• <strong>(1) Tên CLB:</strong> <code class="bg-slate-100 px-1 rounded">${p.club}</code></div>
+          <div>• <strong>(2) Trích đề:</strong> <code class="bg-slate-100 px-1 rounded">${p.quote1}</code></div>
+          <div>• <strong>(3) Cảm xúc:</strong> <code class="bg-slate-100 px-1 rounded">${p.sentiment1}</code></div>
+          <div>• <strong>(4) Giải pháp:</strong> <code class="bg-slate-100 px-1 rounded">${p.sol1}</code></div>
+        </div>
+        <div class="bg-white p-2.5 rounded-lg border border-amber-200 space-y-1">
+          <div class="font-bold text-slate-900">Gợi ý điền Khung 2 (Thư gửi Quản lý):</div>
+          <div>• <strong>(2) Tên CLB:</strong> <code class="bg-slate-100 px-1 rounded">${p.club}</code></div>
+          <div>• <strong>(3) Trích đề:</strong> <code class="bg-slate-100 px-1 rounded">${p.quote2}</code></div>
+          <div>• <strong>(4) Cảm xúc:</strong> <code class="bg-slate-100 px-1 rounded">${p.sentiment2}</code></div>
+          <div>• <strong>(5) Đề xuất 1:</strong> <code class="bg-slate-100 px-1 rounded">${p.sol2a}</code></div>
+          <div>• <strong>(6) Đề xuất 2:</strong> <code class="bg-slate-100 px-1 rounded">${p.sol2b}</code></div>
+        </div>
+      `;
+    }
+
+    function evaluateEditor1() {
+      const editor = document.getElementById("editor1");
+      const hardLimit = document.getElementById("hardLimitToggle").checked;
+      if (hardLimit && countWords(editor.value) > 75) {
+        editor.value = enforceMaxWords(editor.value, 75);
+        showToast("Đã chạm giới hạn tối đa 75 từ của Thư gửi bạn!");
+      }
+
+      const text = editor.value;
+      const words = countWords(text);
+      const chars = text.length;
+
+      document.getElementById("wordCount1").textContent = words;
+      document.getElementById("charCount1").textContent = `${chars} ký tự`;
+
+      const bar = document.getElementById("wordBar1");
+      const status = document.getElementById("wordStatusText1");
+      const badge = document.getElementById("wordBadge1");
+
+      const pct = Math.min(100, Math.round((words / 90) * 100));
+      bar.style.width = `${pct}%`;
+
+      if (words === 0) {
+        bar.className = "h-full bg-amber-500 transition-all duration-200";
+        status.textContent = "Chưa gõ từ nào (Mục tiêu: 50 – 75 từ)";
+        status.className = "font-semibold text-slate-500";
+        badge.className = "inline-flex items-center gap-1.5 bg-white/15 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-white";
+      } else if (words < 50) {
+        bar.className = "h-full bg-amber-500 transition-all duration-200";
+        status.textContent = `Còn thiếu ${50 - words} từ nữa để đạt mốc tối thiểu 50 từ`;
+        status.className = "font-semibold text-amber-600";
+        badge.className = "inline-flex items-center gap-1.5 bg-amber-400 text-slate-950 px-3 py-1 rounded-full text-xs font-bold";
+      } else if (words <= 75) {
+        bar.className = "h-full bg-emerald-500 transition-all duration-200";
+        status.textContent = `Đạt chuẩn số từ (${words}/75 từ — Còn dư ${75 - words} từ)`;
+        status.className = "font-semibold text-emerald-600";
+        badge.className = "inline-flex items-center gap-1.5 bg-emerald-400 text-slate-950 px-3 py-1 rounded-full text-xs font-bold";
+      } else {
+        bar.className = "h-full bg-rose-500 transition-all duration-200";
+        status.textContent = `Vượt quá giới hạn ${words - 75} từ! (Đang có ${words}/75 từ — Nên rút gọn)`;
+        status.className = "font-semibold text-rose-600";
+        badge.className = "inline-flex items-center gap-1.5 bg-rose-500 text-white px-3 py-1 rounded-full text-xs font-bold";
+      }
+
+      // Evaluate checklist 1
+      let passedCount = 0;
+      const checklistEl = document.getElementById("checklist1");
+      checklistEl.innerHTML = CHECK_RULES_1.map((rule) => {
+        const ok = rule.test(text);
+        if (ok) passedCount++;
+        return `
+          <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border ${ok ? "bg-emerald-50 border-emerald-200 text-emerald-900" : "bg-slate-50 border-slate-200 text-slate-500"
+          }">
+            <span class="font-bold ${ok ? "text-emerald-600" : "text-slate-400"}">${ok ? "✓" : "○"}</span>
+            <span class="truncate font-medium">${rule.label}</span>
+          </div>
+        `;
+      }).join("");
+
+      const scoreBadge = document.getElementById("scoreBadge1");
+      scoreBadge.textContent = `Đã khớp: ${passedCount}/7 mục`;
+      scoreBadge.className = `text-xs font-bold px-2.5 py-0.5 rounded-full ${passedCount === 7
+        ? "bg-emerald-100 text-emerald-800"
+        : passedCount >= 4
+          ? "bg-amber-100 text-amber-800"
+          : "bg-slate-100 text-slate-600"
+        }`;
+
+      updateOverallBand(words, passedCount, countWords(document.getElementById("editor2").value));
+      return { words, passedCount };
+    }
+
+    function evaluateEditor2() {
+      const editor = document.getElementById("editor2");
+      const hardLimit = document.getElementById("hardLimitToggle").checked;
+      if (hardLimit && countWords(editor.value) > 250) {
+        editor.value = enforceMaxWords(editor.value, 250);
+        showToast("Đã chạm giới hạn tối đa 250 từ của Thư gửi Quản lý!");
+      }
+
+      const text = editor.value;
+      const words = countWords(text);
+      const chars = text.length;
+
+      document.getElementById("wordCount2").textContent = words;
+      document.getElementById("charCount2").textContent = `${chars} ký tự`;
+
+      const bar = document.getElementById("wordBar2");
+      const status = document.getElementById("wordStatusText2");
+      const badge = document.getElementById("wordBadge2");
+
+      const pct = Math.min(100, Math.round((words / 260) * 100));
+      bar.style.width = `${pct}%`;
+
+      if (words === 0) {
+        bar.className = "h-full bg-amber-500 transition-all duration-200";
+        status.textContent = "Chưa gõ từ nào (Mục tiêu: 120 – 250 từ, đẹp nhất 140–180 từ)";
+        status.className = "font-semibold text-slate-500";
+        badge.className = "inline-flex items-center gap-1.5 bg-white/15 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-white";
+      } else if (words < 120) {
+        bar.className = "h-full bg-amber-500 transition-all duration-200";
+        status.textContent = `Còn thiếu ${120 - words} từ nữa để đạt mốc tối thiểu 120 từ`;
+        status.className = "font-semibold text-amber-600";
+        badge.className = "inline-flex items-center gap-1.5 bg-amber-400 text-slate-950 px-3 py-1 rounded-full text-xs font-bold";
+      } else if (words <= 250) {
+        bar.className = "h-full bg-emerald-500 transition-all duration-200";
+        status.textContent = `Đạt chuẩn số từ (${words}/250 từ — Còn dư ${250 - words} từ)`;
+        status.className = "font-semibold text-emerald-600";
+        badge.className = "inline-flex items-center gap-1.5 bg-emerald-400 text-slate-950 px-3 py-1 rounded-full text-xs font-bold";
+      } else {
+        bar.className = "h-full bg-rose-500 transition-all duration-200";
+        status.textContent = `Vượt quá giới hạn ${words - 250} từ! (Đang có ${words}/250 từ — Cần cắt bớt)`;
+        status.className = "font-semibold text-rose-600";
+        badge.className = "inline-flex items-center gap-1.5 bg-rose-500 text-white px-3 py-1 rounded-full text-xs font-bold";
+      }
+
+      // Check contractions in formal letter
+      const contractions = text.match(/\b(i'm|i’m|don't|don’t|can't|can’t|won't|won’t|didn't|didn’t|isn't|isn’t|aren't|aren’t|it's|it’s|that's|that’s|you're|you’re|we're|we’re)\b/gi);
+      const alertEl = document.getElementById("contractionAlert2");
+      if (contractions && contractions.length > 0) {
+        const unique = [...new Set(contractions.map(c => c.toLowerCase()))];
+        alertEl.classList.remove("hidden");
+        alertEl.textContent = `⚠️ Phát hiện từ viết tắt không trang trọng trong thư gửi Quản lý: ${unique.join(", ")}. Hãy viết tách rõ (ví dụ: I am, do not, cannot) để không bị trừ điểm văn phong (Register)!`;
+      } else {
+        alertEl.classList.add("hidden");
+      }
+
+      // Evaluate checklist 2
+      let passedCount = 0;
+      const checklistEl = document.getElementById("checklist2");
+      checklistEl.innerHTML = CHECK_RULES_2.map((rule) => {
+        const ok = rule.test(text);
+        if (ok) passedCount++;
+        return `
+          <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border ${ok ? "bg-emerald-50 border-emerald-200 text-emerald-900" : "bg-slate-50 border-slate-200 text-slate-500"
+          }">
+            <span class="font-bold ${ok ? "text-emerald-600" : "text-slate-400"}">${ok ? "✓" : "○"}</span>
+            <span class="truncate font-medium">${rule.label}</span>
+          </div>
+        `;
+      }).join("");
+
+      const scoreBadge = document.getElementById("scoreBadge2");
+      scoreBadge.textContent = `Đã khớp: ${passedCount}/7 mục`;
+      scoreBadge.className = `text-xs font-bold px-2.5 py-0.5 rounded-full ${passedCount === 7
+        ? "bg-emerald-100 text-emerald-800"
+        : passedCount >= 4
+          ? "bg-amber-100 text-amber-800"
+          : "bg-slate-100 text-slate-600"
+        }`;
+
+      updateOverallBand(countWords(document.getElementById("editor1").value), null, words, passedCount, contractions);
+    }
+
+    function updateOverallBand(w1, p1, w2, p2, contractions2) {
+      const text1 = document.getElementById("editor1").value;
+      const text2 = document.getElementById("editor2").value;
+      const words1 = countWords(text1);
+      const words2 = countWords(text2);
+      const pass1 = CHECK_RULES_1.filter(r => r.test(text1)).length;
+      const pass2 = CHECK_RULES_2.filter(r => r.test(text2)).length;
+      const hasPlaceholder = /\.{3,}/.test(text1 + " " + text2);
+      const hasContraction2 = /\b(i'm|i’m|don't|don’t|can't|can’t|won't|won’t|it's|it’s|you're|you’re)\b/i.test(text2);
+
+      const badge = document.getElementById("estimatedBandBadge");
+      const reason = document.getElementById("estimatedBandReason");
+
+      if (words1 < 15 && words2 < 15) {
+        badge.textContent = "Đang chờ bạn gõ bài...";
+        badge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700";
+        reason.textContent = "Hãy gõ hoặc bấm '+ Chèn sườn Khung' để bắt đầu luyện viết và xem đánh giá tự động.";
+        return;
+      }
+
+      if (hasPlaceholder) {
+        badge.textContent = "Đang điền dở chỗ trống (...)";
+        badge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800";
+        reason.textContent = "Bạn vẫn còn dấu '...' chưa điền hết trong khung. Hãy thay thế toàn bộ dấu '...' bằng tên CLB, nội dung đề và giải pháp.";
+        return;
+      }
+
+      if (pass1 === 7 && pass2 === 7 && words1 >= 50 && words1 <= 78 && words2 >= 120 && words2 <= 250 && !hasContraction2) {
+        badge.textContent = "Đạt chuẩn Band B2 – C1";
+        badge.className = "px-3 py-0.5 rounded-full text-xs font-bold bg-emerald-600 text-white";
+        reason.textContent = `Xuất sắc! Cả 2 bức thư đều khớp đủ 7/7 thành phần khung, số từ chuẩn (${words1} từ & ${words2} từ), có từ nối giải thích lý do và không mắc lỗi viết tắt ở thư trang trọng.`;
+      } else if (pass1 >= 5 && pass2 >= 5 && words1 >= 45 && words2 >= 105) {
+        badge.textContent = "Đạt chuẩn Band B1 – B2 thấp";
+        badge.className = "px-3 py-0.5 rounded-full text-xs font-bold bg-blue-600 text-white";
+        reason.textContent = `Bài viết đã lên form khá tốt (Khớp ${pass1}/7 mục ở Thư 1 và ${pass2}/7 mục ở Thư 2). Hãy kiểm tra lại các mục còn dấu tròn (○) hoặc điều chỉnh số từ (${words1} & ${words2} từ) để kéo chắc lên B2.`;
+      } else {
+        badge.textContent = "Đang ở mức A2 / Cần bổ sung";
+        badge.className = "px-3 py-0.5 rounded-full text-xs font-bold bg-amber-500 text-white";
+        reason.textContent = `Hiện tại Thư 1 đạt ${words1}/50–75 từ (${pass1}/7 mục khung) và Thư 2 đạt ${words2}/120–250 từ (${pass2}/7 mục khung). Hãy hoàn thiện thêm các phần còn thiếu nhé.`;
+      }
+    }
+
+    // ==================== TAB 2: MEMORIZE & WORD DIFF CHECKER ====================
+    function loadMemorizeTarget() {
+      const targetKey = document.getElementById("memTargetSelect").value;
+      const preset = TEMPLATES[currentPreset];
+      const text = targetKey === "frame1" ? preset.frame1Skeleton : preset.frame2Skeleton;
+      const targetInput = document.getElementById("targetFrameInput");
+      targetInput.value = text;
+      document.getElementById("targetWordCountLabel").textContent = `${countWords(text)} từ khung cố định`;
+      runMemoryDiff();
+    }
+
+    function normalizeToken(w) {
+      return w.toLowerCase().replace(/[.,!?;:()"'’]/g, "");
+    }
+
+    function runMemoryDiff() {
+      const targetRaw = document.getElementById("targetFrameInput").value;
+      const userRaw = document.getElementById("userMemoryInput").value;
+
+      document.getElementById("targetWordCountLabel").textContent = `${countWords(targetRaw)} từ khung cố định`;
+      document.getElementById("memoryWordCountLabel").textContent = `Đã gõ: ${countWords(userRaw)} từ`;
+
+      // Filter out "..." placeholders from target tokens
+      const targetTokens = targetRaw
+        .trim()
+        .split(/\s+/)
+        .filter(t => t && !/^\.+$/.test(t));
+
+      const userTokens = userRaw
+        .trim()
+        .split(/\s+/)
+        .filter(t => t && !/^\.+$/.test(t));
+
+      const diffBox = document.getElementById("diffOutputBox");
+      const accBadge = document.getElementById("memoryAccuracyBadge");
+
+      if (userTokens.length === 0) {
+        diffBox.innerHTML = `<span class="text-slate-400 italic text-xs">Hãy gõ khung vào ô số 2 bên trên để xem đối chiếu từng từ (chữ đúng màu xanh, chữ thiếu màu vàng, chữ sai màu đỏ)...</span>`;
+        accBadge.textContent = "Độ chính xác: 0%";
+        accBadge.className = "text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700";
+        return;
+      }
+
+      // LCS-based word alignment so missing or extra words don't shift the whole paragraph
+      const n = targetTokens.length;
+      const m = userTokens.length;
+      const dp = Array.from({ length: n + 1 }, () => new Uint16Array(m + 1));
+
+      for (let i = n - 1; i >= 0; i--) {
+        const normT = normalizeToken(targetTokens[i]);
+        for (let j = m - 1; j >= 0; j--) {
+          if (normT === normalizeToken(userTokens[j])) {
+            dp[i][j] = 1 + dp[i + 1][j + 1];
+          } else {
+            dp[i][j] = Math.max(dp[i + 1][j], dp[i][j + 1]);
+          }
+        }
+      }
+
+      let i = 0, j = 0;
+      let matched = 0;
+      const htmlParts = [];
+
+      while (i < n && j < m) {
+        if (normalizeToken(targetTokens[i]) === normalizeToken(userTokens[j])) {
+          matched++;
+          htmlParts.push(`<span class="text-emerald-700 font-medium">${userTokens[j]}</span>`);
+          i++;
+          j++;
+        } else if (dp[i + 1][j] >= dp[i][j + 1]) {
+          htmlParts.push(`<span class="bg-amber-100 text-amber-900 px-1 rounded border border-amber-300 text-xs" title="Còn thiếu từ này">[Thiếu: ${targetTokens[i]}]</span>`);
+          i++;
+        } else {
+          htmlParts.push(`<span class="bg-rose-100 text-rose-700 line-through px-1 rounded border border-rose-300" title="Từ gõ sai hoặc dư">${userTokens[j]}</span>`);
+          j++;
+        }
+      }
+      while (i < n) {
+        htmlParts.push(`<span class="bg-amber-100 text-amber-900 px-1 rounded border border-amber-300 text-xs">[Thiếu: ${targetTokens[i]}]</span>`);
+        i++;
+      }
+      while (j < m) {
+        htmlParts.push(`<span class="bg-rose-100 text-rose-700 line-through px-1 rounded border border-rose-300">${userTokens[j]}</span>`);
+        j++;
+      }
+
+      const accuracy = n > 0 ? Math.round((matched / n) * 100) : 0;
+      diffBox.innerHTML = htmlParts.join(" ");
+
+      accBadge.textContent = `Độ khớp khung: ${accuracy}% (${matched}/${n} từ khung)`;
+      if (accuracy >= 90) {
+        accBadge.className = "text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800";
+      } else if (accuracy >= 60) {
+        accBadge.className = "text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-amber-100 text-amber-800";
+      } else {
+        accBadge.className = "text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-rose-100 text-rose-800";
+      }
+    }
+
+    // ==================== TIMER ====================
+    function renderTimer() {
+      const mins = String(Math.floor(timerSeconds / 60)).padStart(2, "0");
+      const secs = String(timerSeconds % 60).padStart(2, "0");
+      document.getElementById("timerDisplay").textContent = `${mins}:${secs}`;
+    }
+
+    function toggleTimer() {
+      const btn = document.getElementById("timerToggleBtn");
+      if (isTimerRunning) {
+        clearInterval(timerInterval);
+        isTimerRunning = false;
+        btn.textContent = "Tiếp tục";
+      } else {
+        isTimerRunning = true;
+        btn.textContent = "Tạm dừng";
+        timerInterval = setInterval(() => {
+          if (timerSeconds > 0) {
+            timerSeconds--;
+            renderTimer();
+          } else {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            btn.textContent = "Bắt đầu";
+            showToast("⏰ Đã hết 30 phút làm bài Part 4!");
+          }
+        }, 1000);
+      }
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      isTimerRunning = false;
+      timerSeconds = 30 * 60;
+      renderTimer();
+      document.getElementById("timerToggleBtn").textContent = "Bắt đầu";
+    }
+
+    // ==================== EVENT LISTENERS ====================
+    window.addEventListener("DOMContentLoaded", () => {
+      updateReferenceBoxes();
+      updatePromptUI();
+      evaluateEditor1();
+      evaluateEditor2();
+      loadMemorizeTarget();
+
+      // Tabs
+      const tabs = [
+        { btn: "tabPracticeBtn", view: "viewPractice" },
+        { btn: "tabMemorizeBtn", view: "viewMemorize" },
+        { btn: "tabEmergencyBtn", view: "viewEmergency" }
+      ];
+      tabs.forEach(({ btn, view }) => {
+        document.getElementById(btn).addEventListener("click", () => {
+          tabs.forEach(t => {
+            const b = document.getElementById(t.btn);
+            const v = document.getElementById(t.view);
+            if (t.btn === btn) {
+              v.classList.remove("hidden");
+              b.className = "px-4 py-2 text-xs sm:text-sm font-semibold rounded-t-lg border-b-2 border-blue-500 text-white bg-slate-800/70 transition flex items-center gap-2";
+            } else {
+              v.classList.add("hidden");
+              b.className = "px-4 py-2 text-xs sm:text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center gap-2";
+            }
+          });
+        });
+      });
+
+      // Template version preset
+      document.getElementById("templatePresetSelect").addEventListener("change", (e) => {
+        currentPreset = e.target.value;
+        updateReferenceBoxes();
+        loadMemorizeTarget();
+        showToast(`Đã chuyển sang: ${TEMPLATES[currentPreset].name}`);
+      });
+
+      // Prompt selection & hints
+      document.getElementById("promptSelect").addEventListener("change", updatePromptUI);
+      document.getElementById("toggleHintModalBtn").addEventListener("click", () => {
+        const drawer = document.getElementById("hintDrawer");
+        drawer.classList.toggle("hidden");
+      });
+
+      // Fill sample complete answer
+      document.getElementById("fillSampleAnswerBtn").addEventListener("click", () => {
+        const idx = Number(document.getElementById("promptSelect").value) || 0;
+        const p = SAMPLE_PROMPTS[idx];
+        document.getElementById("editor1").value =
+          `Hi Tim,\n\nHow have you been recently? I hope everything goes well with you.\n\nI just received an email from our ${p.club} club manager. The email mentioned that the club ${p.quote1}. I feel so ${p.sentiment1} to hear that.\n\nI think the club should ${p.sol1}. What's your opinion about this?\n\nPlease write to me soon and let me know what you think.\n\nSpeak soon,\nAlex`;
+
+        document.getElementById("editor2").value =
+          `Dear Manager,\n\nI hope this email reaches you in good health and high spirits. My name is Alex Nguyen, and I have been a dedicated member of the ${p.club} club for more than two years.\n\nI am writing this email to share my thoughts and suggestions regarding the recent notice of the club. In your email, you mentioned that ${p.quote2}. Honestly, I was quite ${p.sentiment2} when I read this announcement.\n\nIn my opinion, we should ${p.sol2a}. Furthermore, I recommend we ${p.sol2b}. It would be great if the club could consider my ideas to help all members have a better experience.\n\nI have talked to other club members and found that they share my opinions.\n\nI hope my suggestions are helpful. I appreciate your attention to this matter. Please feel free to reach out if you need more information.\n\nI am looking forward to hearing from you.\n\nYours faithfully,\nAlex Nguyen`;
+
+        evaluateEditor1();
+        evaluateEditor2();
+        showToast("Đã điền bài mẫu hoàn chỉnh vào cả 2 khung!");
+      });
+
+      // Editor 1 controls
+      document.getElementById("editor1").addEventListener("input", evaluateEditor1);
+      document.getElementById("insertSkeleton1Btn").addEventListener("click", () => {
+        document.getElementById("editor1").value = TEMPLATES[currentPreset].frame1Skeleton;
+        evaluateEditor1();
+        showToast("Đã chèn sườn Khung 1! Hãy thay các dấu '...' bằng nội dung đề.");
+      });
+      document.getElementById("insertRescue1Btn").addEventListener("click", () => {
+        const idx = Number(document.getElementById("promptSelect").value);
+        const clubName = !isNaN(idx) ? SAMPLE_PROMPTS[idx].club : "music";
+        document.getElementById("editor1").value =
+          `Hi Tim,\n\nHow have you been recently? I hope everything goes well with you.\n\nI just received an email from our ${clubName} club manager. The email mentioned that the club is planning some important changes next month. I feel so surprised to hear that.\n\nI think the club should send an online survey because we need to collect all members' opinions. What's your opinion about this?\n\nPlease write to me soon and let me know what you think.\n\nSpeak soon,\nAlex`;
+        evaluateEditor1();
+        showToast("Đã chèn bài Chữa Cháy vạn năng cho Khung 1 (74 từ)!");
+      });
+      document.getElementById("toggleRef1Btn").addEventListener("click", () => {
+        document.getElementById("refBox1").classList.toggle("hidden");
+      });
+      document.getElementById("clear1Btn").addEventListener("click", () => {
+        document.getElementById("editor1").value = "";
+        evaluateEditor1();
+      });
+
+      // Editor 2 controls
+      document.getElementById("editor2").addEventListener("input", evaluateEditor2);
+      document.getElementById("insertSkeleton2Btn").addEventListener("click", () => {
+        document.getElementById("editor2").value = TEMPLATES[currentPreset].frame2Skeleton;
+        evaluateEditor2();
+        showToast("Đã chèn sườn Khung 2! Hãy thay các dấu '...' bằng nội dung đề.");
+      });
+      document.getElementById("insertRescue2Btn").addEventListener("click", () => {
+        const idx = Number(document.getElementById("promptSelect").value);
+        const clubName = !isNaN(idx) ? SAMPLE_PROMPTS[idx].club : "music";
+        document.getElementById("editor2").value =
+          `Dear Manager,\n\nI hope this email reaches you in good health and high spirits. My name is Alex Nguyen, and I have been a dedicated member of the ${clubName} club for more than two years.\n\nI am writing this email to share my thoughts and suggestions regarding the recent notice of the club. In your email, you mentioned that the club is planning some important changes for members next month. Honestly, I was quite surprised when I read this announcement.\n\nIn my opinion, we should organize a short meeting next week because members need to discuss this matter together. Furthermore, I recommend we send an online survey via email so that everyone can vote for the best option. It would be great if the club could consider my ideas to help all members have a better experience.\n\nI have talked to other club members and found that they share my opinions.\n\nI hope my suggestions are helpful. I appreciate your attention to this matter. Please feel free to reach out if you need more information.\n\nI am looking forward to hearing from you.\n\nYours faithfully,\nAlex Nguyen`;
+        evaluateEditor2();
+        showToast("Đã chèn bài Chữa Cháy vạn năng cho Khung 2 (179 từ)!");
+      });
+      document.getElementById("toggleRef2Btn").addEventListener("click", () => {
+        document.getElementById("refBox2").classList.toggle("hidden");
+      });
+      document.getElementById("clear2Btn").addEventListener("click", () => {
+        document.getElementById("editor2").value = "";
+        evaluateEditor2();
+      });
+
+      // Copy both
+      document.getElementById("copyBothBtn").addEventListener("click", () => {
+        const t1 = document.getElementById("editor1").value;
+        const t2 = document.getElementById("editor2").value;
+        const combined = `=== PART 4.1: FRIEND EMAIL (${countWords(t1)} words) ===\n${t1}\n\n=== PART 4.2: MANAGER EMAIL (${countWords(t2)} words) ===\n${t2}`;
+        const temp = document.createElement("textarea");
+        temp.value = combined;
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand("copy");
+        document.body.removeChild(temp);
+        showToast("Đã sao chép cả 2 bức thư vào bộ nhớ tạm!");
+      });
+
+      // Memorize Tab controls
+      document.getElementById("memTargetSelect").addEventListener("change", loadMemorizeTarget);
+      document.getElementById("targetFrameInput").addEventListener("input", runMemoryDiff);
+      document.getElementById("userMemoryInput").addEventListener("input", runMemoryDiff);
+      document.getElementById("checkMemoryNowBtn").addEventListener("click", () => {
+        runMemoryDiff();
+        showToast("Đã kiểm tra độ chính xác từng từ với khung mẫu!");
+      });
+      document.getElementById("clearMemoryBtn").addEventListener("click", () => {
+        document.getElementById("userMemoryInput").value = "";
+        runMemoryDiff();
+      });
+
+      const toggleOverlay = () => {
+        const overlay = document.getElementById("targetHiddenOverlay");
+        const isHidden = overlay.classList.contains("hidden");
+        if (isHidden) {
+          overlay.classList.remove("hidden");
+          document.getElementById("hideTargetToggleBtn").textContent = "👁 Hiện khung mẫu";
+        } else {
+          overlay.classList.add("hidden");
+          document.getElementById("hideTargetToggleBtn").textContent = "🙈 Ẩn khung mẫu để tự nhớ";
+        }
+      };
+      document.getElementById("hideTargetToggleBtn").addEventListener("click", toggleOverlay);
+      document.getElementById("revealTargetBtn").addEventListener("click", toggleOverlay);
+
+      // Emergency tab button
+      document.getElementById("applyEmergencyToPracticeBtn").addEventListener("click", () => {
+        document.getElementById("tabPracticeBtn").click();
+        document.getElementById("insertRescue1Btn").click();
+        document.getElementById("insertRescue2Btn").click();
+      });
+
+      // Timer
+      document.getElementById("timerToggleBtn").addEventListener("click", toggleTimer);
+      document.getElementById("timerResetBtn").addEventListener("click", resetTimer);
+    });
+  </script>
+</body>
+
+</html>
